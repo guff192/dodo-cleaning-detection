@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import cv2
 
+from detector import get_people_boxes
 from errors import exit_with_err_description
 
 if TYPE_CHECKING:
@@ -28,20 +29,30 @@ def select_roi(video_path: str) -> Rect:
 def run_preview(video_path: str, roi: Rect) -> None:
     cap = cv2.VideoCapture(video_path)
     x, y, w, h = roi
-    color = (0, 255, 0)
+    table_color = (0, 255, 0)
+    person_color = (255, 0, 0)
 
     print("Starting video preview, press 'q' to quit...")
 
     window_name = "Video detection preview"
+    frame_count = 0
+    cached_boxes = []
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+        cv2.rectangle(frame, (x, y), (x + w, y + h), table_color, 2)
 
         text = "Table zone"
-        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, color, 2)
+        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, table_color, 2)
+
+        if frame_count % 15 == 0:
+            cached_boxes = get_people_boxes(frame)
+
+        for box in cached_boxes:
+            x1, y1, x2, y2 = box
+            cv2.rectangle(frame, (x1, y1), (x2, y2), person_color, 2)
 
         cv2.imshow(window_name, frame)
 
