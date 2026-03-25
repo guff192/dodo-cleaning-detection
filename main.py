@@ -22,8 +22,5 @@ if __name__ == "__main__":
 
     roi = select_roi(video)
     x, y, w, h = roi
-    print(
-        f"Selected table coordinates: upper-left corner: ({x}, {y}), width: {w}, height: {h}"
-    )
 
     run_preview(video, roi)
