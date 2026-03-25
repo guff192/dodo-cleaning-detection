@@ -23,3 +23,30 @@ def select_roi(video_path: str) -> Rect:
     cap.release()
 
     return roi
+
+
+def run_preview(video_path: str, roi: Rect) -> None:
+    cap = cv2.VideoCapture(video_path)
+    x, y, w, h = roi
+    color = (0, 255, 0)
+
+    print("Starting video preview, press 'q' to quit...")
+
+    window_name = "Video detection preview"
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+
+        text = "Table zone"
+        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, color, 2)
+
+        cv2.imshow(window_name, frame)
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    cv2.destroyWindow(window_name)
+    cap.release()

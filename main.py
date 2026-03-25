@@ -3,7 +3,7 @@ import os
 import os.path
 
 from errors import exit_with_err_description
-from video import select_roi
+from video import select_roi, run_preview
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -25,3 +25,5 @@ if __name__ == "__main__":
     print(
         f"Selected table coordinates: upper-left corner: ({x}, {y}), width: {w}, height: {h}"
     )
+
+    run_preview(video, roi)
