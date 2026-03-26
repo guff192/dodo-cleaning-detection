@@ -3,3 +3,9 @@
 
 # video-assets
 video-assets
+
+# python cache
+*__pycache__
+
+# models
+*.pt
