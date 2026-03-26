@@ -31,6 +31,7 @@ def run_preview(video_path: str, roi: Rect) -> None:
     x, y, w, h = roi
     table_color = (0, 255, 0)
     person_color = (255, 0, 0)
+    point_color = (0, 0, 255)
 
     print("Starting video preview, press 'q' to quit...")
 
@@ -52,7 +53,15 @@ def run_preview(video_path: str, roi: Rect) -> None:
 
         for box in cached_boxes:
             x1, y1, x2, y2 = box
+
             cv2.rectangle(frame, (x1, y1), (x2, y2), person_color, 2)
+
+            # Bottom-Center Point (BCP) coordinates
+            bcp_x = int((x1 + x2) / 2)
+            bcp_y = y2
+
+            # Draw BCP, -1 makes it filled
+            cv2.circle(frame, (bcp_x, bcp_y), 5, point_color, -1)
 
         cv2.imshow(window_name, frame)
 
