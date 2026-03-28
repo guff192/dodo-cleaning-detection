@@ -28,7 +28,7 @@ def select_roi(video_path: str) -> Rect:
     return roi
 
 
-def run_preview(video_path: str, roi: Rect) -> None:
+def process_video(video_path: str, roi: Rect) -> None:
     cap = cv2.VideoCapture(video_path)
     x, y, w, h = roi
     table_color = (0, 255, 0)

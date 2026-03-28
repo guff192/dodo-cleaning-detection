@@ -3,7 +3,7 @@ import os
 import os.path
 
 from errors import exit_with_err_description
-from video import select_roi, run_preview
+from video import select_roi, process_video
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -23,4 +23,4 @@ if __name__ == "__main__":
     roi = select_roi(video)
     x, y, w, h = roi
 
-    run_preview(video, roi)
+    process_video(video, roi)
