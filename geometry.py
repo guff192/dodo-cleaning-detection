@@ -12,7 +12,7 @@ def is_table_occupied_by_person(roi: Rect, person_box: numpy.ndarray) -> bool:
     if not is_point_in_rect(person_bcp, (x, y, x + w, y + h)):
         return False
 
-    if get_intersection_ratio((x, y, x + w, y + h), (x1, y1, x2, y2)) < 0.5:
+    if get_intersection_ratio((x, y, x + w, y + h), (x1, y1, x2, y2)) > 0.5:
         return False
 
     return True
