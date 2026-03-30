@@ -30,6 +30,8 @@ def select_roi(video_path: str) -> Rect:
 
 def process_video(video_path: str, roi: Rect) -> None:
     cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise CantOpenVideo(video_path)
     x, y, w, h = roi
     table_color = (0, 255, 0)
     person_color = (255, 0, 0)
