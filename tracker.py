@@ -26,6 +26,10 @@ class TableTracker:
         self._t_enter = t_enter
         self._t_exit = t_exit
 
+    @property
+    def table_state(self) -> TableState:
+        return self._state
+
     def update(self, is_person_in_zone: bool, current_time: float) -> TableEvent | None:
         match self._state:
             case TableState.EMPTY:
