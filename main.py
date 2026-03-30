@@ -10,6 +10,9 @@ if __name__ == "__main__":
         "Detects time bounds of people interactions with tables from restaurant's camera video"
     )
     parser.add_argument("--video", type=str, required=True)
+    parser.add_argument(
+        "--preview", action="store_true", help="Show live detection preview (slow)"
+    )
 
     args = parser.parse_args()
     video = args.video
@@ -23,4 +26,4 @@ if __name__ == "__main__":
     roi = select_roi(video)
     x, y, w, h = roi
 
-    process_video(video, roi)
+    process_video(video, roi, args.preview)

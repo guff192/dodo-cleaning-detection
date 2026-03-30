@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 import cv2
 
 from detector import get_people_boxes
-from errors import exit_with_err_description
+from errors import CantOpenVideo, exit_with_err_description
 from geometry import get_bottom_center_point, is_table_occupied_by_person
-from tracker import TableEventType, TableTracker
+from tracker import TableEvent, TableEventType, TableState, TableTracker
 
 if TYPE_CHECKING:
     from cv2.typing import Rect
@@ -28,22 +28,32 @@ def select_roi(video_path: str) -> Rect:
     return roi
 
 
-def process_video(video_path: str, roi: Rect) -> None:
+def process_video(video_path: str, roi: Rect, show_preview: bool = False) -> list[TableEvent]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise CantOpenVideo(video_path)
+
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
     x, y, w, h = roi
-    table_color = (0, 255, 0)
-    person_color = (255, 0, 0)
-    point_color = (0, 0, 255)
 
-    print("Starting video preview, press 'q' to quit...")
+    # colors BGR
+    COLOR_EMPTY = (0, 255, 0)
+    COLOR_OCCUPIED = (0, 0, 255)
+    COLOR_PERSON = (255, 0, 0)
+    COLOR_POINT = (0, 0, 255)
 
-    window_name = "Video detection preview"
+    print(f"Processing video: {video_path}")
+    if show_preview:
+        print("Preview mode ENABLED. Press 'q' to stop.")
+    else:
+        print("Running in background mode (faster)...")
+
+    window_name = "Analytics process"
     tracker = TableTracker()
     frame_count = 0
     cached_boxes = []
-    events = []
+    events: list[TableEvent] = []
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -56,37 +66,49 @@ def process_video(video_path: str, roi: Rect) -> None:
         is_anyone_in_zone = False
 
         for box in cached_boxes:
-            x1, y1, x2, y2 = box
-
             if is_table_occupied_by_person(roi, box):
                 is_anyone_in_zone = True
-                table_color = (0, 0, 255)
-
-            cv2.rectangle(frame, (x1, y1), (x2, y2), person_color, 2)
-
-            # Bottom-Center Point (BCP) coordinates
-            bcp_xy = get_bottom_center_point((x1, y1, x2, y2))
-
-            # Draw BCP, -1 makes it filled
-            cv2.circle(frame, bcp_xy, 5, point_color, -1)
 
         event = tracker.update(is_anyone_in_zone, current_time)
         if event is not None:
             events.append(event)
-            print(f"Table is {event.type.lower()} at {event.timestamp}")
-            if event.type == TableEventType.FREED:
-                table_color = (0, 255, 0)
+            print(f"\n[{event.timestamp:.1f}s] Event: {event.type.value}")
 
-        cv2.rectangle(frame, (x, y), (x + w, y + h), table_color, 2)
-        text = "Table zone"
-        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, table_color, 2)
+        
+        if frame_count % 500 == 0:
+            print(f"\rProcessed {frame_count}/{total_frames} ({frame_count * 100 // total_frames}%) frames...", end="")
 
         frame_count += 1
+
+        if not show_preview:
+            continue
+
+        for box in cached_boxes:
+            x1, y1, x2, y2 = box
+
+            # Bottom-Center Point (BCP) coordinates
+            bcp_xy = get_bottom_center_point((x1, y1, x2, y2))
+
+            cv2.rectangle(frame, (x1, y1), (x2, y2), COLOR_PERSON, 2)
+
+            # Draw BCP, -1 makes it filled
+            cv2.circle(frame, bcp_xy, 5, COLOR_POINT, -1)
+
+        table_color = (
+            COLOR_EMPTY if tracker.table_state == TableState.EMPTY else COLOR_OCCUPIED
+        )
+        cv2.rectangle(frame, (x, y), (x + w, y + h), table_color, 2)
+        text = f"STATE: {tracker.table_state.value}"
+        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, table_color, 2)
 
         cv2.imshow(window_name, frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
-    cv2.destroyWindow(window_name)
+    if show_preview:
+        cv2.destroyWindow(window_name)
+
     cap.release()
+
+    return events
