@@ -22,7 +22,32 @@ if TYPE_CHECKING:
     from cv2.typing import Rect
 
 
-def select_roi(video_path: str) -> Rect:
+def _draw_preview_overlay(
+    frame: cv2.typing.MatLike,
+    roi: RectXYWH,
+    people_boxes: list[RectXYXY],
+    table_state: TableState,
+):
+    x, y, w, h = roi
+
+    for box in people_boxes:
+        x1, y1, x2, y2 = box
+
+        cv2.rectangle(frame, (x1, y1), (x2, y2), COLOR_PERSON, 2)
+
+        # Bottom-Center Point (BCP) coordinates
+        bcp_xy = get_bottom_center_point((x1, y1, x2, y2))
+        # Draw BCP, -1 thickness makes it filled
+        cv2.circle(frame, bcp_xy, 5, COLOR_POINT, -1)
+
+    table_color = COLOR_EMPTY if table_state == TableState.EMPTY else COLOR_OCCUPIED
+    cv2.rectangle(frame, (x, y), (x + w, y + h), table_color, 2)
+
+    text = f"STATE: {table_state.value}"
+    cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, table_color, 2)
+
+
+def select_roi(video_path: str) -> RectXYWH:
     cap = cv2.VideoCapture(video_path)
 
     ret, frame = cap.read()
@@ -36,31 +61,25 @@ def select_roi(video_path: str) -> Rect:
     cv2.destroyWindow(window_name)
     cap.release()
 
-    return roi
+    if roi == (0, 0, 0, 0):
+        exit_with_err_description("No ROI selected!")
+
+    x, y, w, h = roi
+    return x, y, w, h
 
 
-def process_video(video_path: str, roi: Rect, show_preview: bool = False) -> list[TableEvent]:
+def process_video(
+    video_path: str, roi: RectXYWH, show_preview: bool = False
+) -> list[TableEvent]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise CantOpenVideo(video_path)
 
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    x, y, w, h = roi
+    log_processing_info(video_path, show_preview)
 
-    # colors BGR
-    COLOR_EMPTY = (0, 255, 0)
-    COLOR_OCCUPIED = (0, 0, 255)
-    COLOR_PERSON = (255, 0, 0)
-    COLOR_POINT = (0, 0, 255)
-
-    print(f"Processing video: {video_path}")
-    if show_preview:
-        print("Preview mode ENABLED. Press 'q' to stop.")
-    else:
-        print("Running in background mode (faster)...")
-
-    window_name = "Analytics process"
+    window_name = PREVIEW_WINDOW_NAME
     tracker = TableTracker()
     frame_count = 0
     cached_boxes = []
@@ -71,47 +90,24 @@ def process_video(video_path: str, roi: Rect, show_preview: bool = False) -> lis
             break
 
         if frame_count % 15 == 0:
-            cached_boxes = get_people_boxes(frame)
+            cached_boxes = [ndarray_to_rect_xyxy(box) for box in get_people_boxes(frame)]
 
         current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
-        is_anyone_in_zone = False
+        frame_count += 1
 
-        for box in cached_boxes:
-            if is_table_occupied_by_person(roi, box):
-                is_anyone_in_zone = True
+        anyone_in_zone = is_anyone_in_zone(roi, cached_boxes)
 
-        event = tracker.update(is_anyone_in_zone, current_time)
+        event = tracker.update(anyone_in_zone, current_time)
         if event is not None:
             events.append(event)
             print(f"\n[{event.timestamp:.1f}s] Event: {event.type.value}")
 
-        
-        if frame_count % 500 == 0:
-            print(f"\rProcessed {frame_count}/{total_frames} ({frame_count * 100 // total_frames}%) frames...", end="")
-
-        frame_count += 1
+        log_progress(frame_count, total_frames)
 
         if not show_preview:
             continue
 
-        for box in cached_boxes:
-            x1, y1, x2, y2 = box
-
-            # Bottom-Center Point (BCP) coordinates
-            bcp_xy = get_bottom_center_point((x1, y1, x2, y2))
-
-            cv2.rectangle(frame, (x1, y1), (x2, y2), COLOR_PERSON, 2)
-
-            # Draw BCP, -1 makes it filled
-            cv2.circle(frame, bcp_xy, 5, COLOR_POINT, -1)
-
-        table_color = (
-            COLOR_EMPTY if tracker.table_state == TableState.EMPTY else COLOR_OCCUPIED
-        )
-        cv2.rectangle(frame, (x, y), (x + w, y + h), table_color, 2)
-        text = f"STATE: {tracker.table_state.value}"
-        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, table_color, 2)
-
+        _draw_preview_overlay(frame, roi, cached_boxes, tracker.table_state)
         cv2.imshow(window_name, frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
