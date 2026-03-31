@@ -1,10 +1,16 @@
-from cv2.typing import Rect
-import numpy
-
 from errors import NonPositiveRectangleAreaException
+from custom_types import RectXYWH, RectXYXY, PointXY
 
 
-def is_table_occupied_by_person(roi: Rect, person_box: numpy.ndarray) -> bool:
+def is_anyone_in_zone(roi: RectXYWH, people_boxes: list[RectXYXY]) -> bool:
+    for box in people_boxes:
+        x1, y1, x2, y2 = box
+        if is_table_occupied_by_person(roi, (x1, y1, x2, y2)):
+            return True
+    return False
+
+
+def is_table_occupied_by_person(roi: RectXYWH, person_box: RectXYXY) -> bool:
     x, y, w, h = roi
     x1, y1, x2, y2 = person_box
 
@@ -16,28 +22,6 @@ def is_table_occupied_by_person(roi: Rect, person_box: numpy.ndarray) -> bool:
         return False
 
     return True
-
-
-RectXYXY = tuple[int, int, int, int]
-"""
-Rectangle in the form (x1, y1, x2, y2) 
-
-The first pair of coordinates is for top left corner,
-the second pair is for bottom right corner.
-"""
-
-RectXYWH = tuple[int, int, int, int]
-"""
-Rectangle in the form (x1, y1, width, height) 
-
-The first pair of numbers are the x and y coordinates for top left corner,
-the second pair are width and height of the rectangle.
-"""
-
-PointXY = tuple[int, int]
-"""
-Point in the form (x, y)
-"""
 
 
 def get_bottom_center_point(rect: RectXYXY) -> PointXY:
