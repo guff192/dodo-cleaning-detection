@@ -24,6 +24,5 @@ if __name__ == "__main__":
     print(f"Selected video: {video}")
 
     roi = select_roi(video)
-    x, y, w, h = roi
 
     process_video(video, roi, args.preview)
