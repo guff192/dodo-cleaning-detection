@@ -1,7 +1,16 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import cv2
 
+from config import (
+    COLOR_EMPTY,
+    COLOR_OCCUPIED,
+    COLOR_PERSON,
+    COLOR_POINT,
+    PREVIEW_WINDOW_NAME,
+)
 from detector import get_people_boxes
 from errors import CantOpenVideo, exit_with_err_description
 from geometry import get_bottom_center_point, is_table_occupied_by_person
