@@ -3,13 +3,16 @@ import os
 import os.path
 
 from errors import exit_with_err_description
-from video import select_roi, run_preview
+from video import select_roi, process_video
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         "Detects time bounds of people interactions with tables from restaurant's camera video"
     )
     parser.add_argument("--video", type=str, required=True)
+    parser.add_argument(
+        "--preview", action="store_true", help="Show live detection preview (slow)"
+    )
 
     args = parser.parse_args()
     video = args.video
@@ -21,6 +24,5 @@ if __name__ == "__main__":
     print(f"Selected video: {video}")
 
     roi = select_roi(video)
-    x, y, w, h = roi
 
-    run_preview(video, roi)
+    process_video(video, roi, args.preview)
