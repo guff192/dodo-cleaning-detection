@@ -15,7 +15,22 @@ from errors import CantOpenVideo, exit_with_err_description
 from geometry import get_bottom_center_point, is_anyone_in_zone
 from custom_types import RectXYWH, RectXYXY, ndarray_to_rect_xyxy
 from logger import log_processing_info, log_progress
-from tracker import TableEvent, TableState, TableTracker
+from tracker import TableEvent, TableEventType, TableState, TableTracker
+
+
+def _get_state_at_time(current_time: float, events: list[TableEvent]) -> TableState:
+    state = TableState.EMPTY
+    for event in events:
+        if not event.timestamp < current_time:
+            break
+
+        match event.type:
+            case TableEventType.APPROACH:
+                state = TableState.OCCUPIED
+            case TableEventType.FREED:
+                state = TableState.EMPTY
+
+    return state
 
 
 def _draw_preview_overlay(
@@ -117,3 +132,39 @@ def process_video(
     cap.release()
 
     return events
+
+
+def render_output_video(video_path: str, output_path: str, events: list[TableEvent], roi: RectXYWH):
+    print(f"\nRendering final video to {output_path}...")
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise CantOpenVideo(video_path)
+
+    # Video saving settings
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore
+    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+    frame_count = 0
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
+        table_state = _get_state_at_time(current_time, events)
+        _draw_preview_overlay(frame, roi, [], table_state)
+
+        frame_count += 1
+
+        log_progress(frame_count, total_frames)
+        out.write(frame)
+
+    cap.release()
+    out.release()
+
+    print("\nDone!")
