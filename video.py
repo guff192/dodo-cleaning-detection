@@ -86,7 +86,9 @@ def process_video(
             break
 
         if frame_count % SKIP_FRAMES == 0:
-            cached_boxes = [ndarray_to_rect_xyxy(box) for box in get_people_boxes(frame)]
+            cached_boxes = [
+                ndarray_to_rect_xyxy(box) for box in get_people_boxes(frame)
+            ]
 
         current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
         frame_count += 1
