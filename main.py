@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path
 
+from analytics import print_statistics
 from errors import exit_with_err_description
 from video import select_roi, process_video
 
@@ -25,4 +26,6 @@ if __name__ == "__main__":
 
     roi = select_roi(video)
 
-    process_video(video, roi, args.preview)
+    events = process_video(video, roi, args.preview)
+
+    print_statistics(events)
