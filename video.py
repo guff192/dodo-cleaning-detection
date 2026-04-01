@@ -11,8 +11,8 @@ from config import (
     COLOR_POINT,
     PREVIEW_WINDOW_NAME,
     SKIP_FRAMES,
-    T_ENTER,
-    T_EXIT,
+    TIME_ENTER,
+    TIME_EXIT,
 )
 from detector import get_people_boxes
 from errors import CantOpenVideo, exit_with_err_description
@@ -83,7 +83,7 @@ def process_video(
     log_processing_info(video_path, show_preview)
 
     window_name = PREVIEW_WINDOW_NAME
-    tracker = TableTracker(t_enter=T_ENTER, t_exit=T_EXIT)
+    tracker = TableTracker(t_enter=TIME_ENTER, t_exit=TIME_EXIT)
     frame_count = 0
     cached_boxes = []
     events: list[TableEvent] = []
