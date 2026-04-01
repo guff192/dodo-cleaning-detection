@@ -1,3 +1,4 @@
+from config import MIN_INTERSECTION_RATIO
 from errors import NonPositiveRectangleAreaException
 from custom_types import RectXYWH, RectXYXY, PointXY
 
@@ -18,7 +19,7 @@ def is_table_occupied_by_person(roi: RectXYWH, person_box: RectXYXY) -> bool:
     if not is_point_in_rect(person_bcp, (x, y, x + w, y + h)):
         return False
 
-    if get_intersection_ratio((x, y, x + w, y + h), (x1, y1, x2, y2)) > 0.5:
+    if get_intersection_ratio((x, y, x + w, y + h), (x1, y1, x2, y2)) > MIN_INTERSECTION_RATIO:
         return False
 
     return True
