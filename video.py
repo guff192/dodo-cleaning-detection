@@ -10,6 +10,7 @@ from config import (
     COLOR_PERSON,
     COLOR_POINT,
     PREVIEW_WINDOW_NAME,
+    SKIP_FRAMES,
 )
 from detector import get_people_boxes
 from errors import CantOpenVideo, exit_with_err_description
@@ -89,7 +90,7 @@ def process_video(
         if not ret:
             break
 
-        if frame_count % 15 == 0:
+        if frame_count % SKIP_FRAMES == 0:
             cached_boxes = [ndarray_to_rect_xyxy(box) for box in get_people_boxes(frame)]
 
         current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000

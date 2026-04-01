@@ -6,3 +6,10 @@ COLOR_POINT = (0, 0, 255)
 
 # window names
 PREVIEW_WINDOW_NAME = "Analytics process"
+
+# detector settings
+MODEL_NAME = "yolov8n.pt"
+PEOPLE_CLASSES = [0]
+CONFIDENCE_THRESHOLD = 0.08
+IMAGE_SIZE = 480
+SKIP_FRAMES = 15
