@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import cv2
 
 from config import (
@@ -20,9 +16,6 @@ from geometry import get_bottom_center_point, is_anyone_in_zone
 from custom_types import RectXYWH, RectXYXY, ndarray_to_rect_xyxy
 from logger import log_processing_info, log_progress
 from tracker import TableEvent, TableState, TableTracker
-
-if TYPE_CHECKING:
-    from cv2.typing import Rect
 
 
 def _draw_preview_overlay(
