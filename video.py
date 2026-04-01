@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import cv2
 
 from config import (
@@ -10,6 +6,9 @@ from config import (
     COLOR_PERSON,
     COLOR_POINT,
     PREVIEW_WINDOW_NAME,
+    SKIP_FRAMES,
+    TIME_ENTER,
+    TIME_EXIT,
 )
 from detector import get_people_boxes
 from errors import CantOpenVideo, exit_with_err_description
@@ -17,9 +16,6 @@ from geometry import get_bottom_center_point, is_anyone_in_zone
 from custom_types import RectXYWH, RectXYXY, ndarray_to_rect_xyxy
 from logger import log_processing_info, log_progress
 from tracker import TableEvent, TableState, TableTracker
-
-if TYPE_CHECKING:
-    from cv2.typing import Rect
 
 
 def _draw_preview_overlay(
@@ -80,7 +76,7 @@ def process_video(
     log_processing_info(video_path, show_preview)
 
     window_name = PREVIEW_WINDOW_NAME
-    tracker = TableTracker()
+    tracker = TableTracker(t_enter=TIME_ENTER, t_exit=TIME_EXIT)
     frame_count = 0
     cached_boxes = []
     events: list[TableEvent] = []
@@ -89,8 +85,10 @@ def process_video(
         if not ret:
             break
 
-        if frame_count % 15 == 0:
-            cached_boxes = [ndarray_to_rect_xyxy(box) for box in get_people_boxes(frame)]
+        if frame_count % SKIP_FRAMES == 0:
+            cached_boxes = [
+                ndarray_to_rect_xyxy(box) for box in get_people_boxes(frame)
+            ]
 
         current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
         frame_count += 1

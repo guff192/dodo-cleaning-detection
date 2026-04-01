@@ -1,24 +1,22 @@
+from config import MIN_INTERSECTION_RATIO
 from errors import NonPositiveRectangleAreaException
 from custom_types import RectXYWH, RectXYXY, PointXY
 
 
 def is_anyone_in_zone(roi: RectXYWH, people_boxes: list[RectXYXY]) -> bool:
     for box in people_boxes:
-        x1, y1, x2, y2 = box
-        if is_table_occupied_by_person(roi, (x1, y1, x2, y2)):
+        if is_table_occupied_by_person(roi, box):
             return True
     return False
 
 
 def is_table_occupied_by_person(roi: RectXYWH, person_box: RectXYXY) -> bool:
     x, y, w, h = roi
-    x1, y1, x2, y2 = person_box
-
-    person_bcp = get_bottom_center_point((x1, y1, x2, y2))
+    person_bcp = get_bottom_center_point(person_box)
     if not is_point_in_rect(person_bcp, (x, y, x + w, y + h)):
         return False
 
-    if get_intersection_ratio((x, y, x + w, y + h), (x1, y1, x2, y2)) > 0.5:
+    if get_intersection_ratio(person_box, (x, y, x + w, y + h)) < MIN_INTERSECTION_RATIO:
         return False
 
     return True
