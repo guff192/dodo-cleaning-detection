@@ -10,11 +10,14 @@ PREVIEW_WINDOW_NAME = "Analytics process"
 # detector settings
 MODEL_NAME = "yolov8n.pt"
 PEOPLE_CLASSES = [0]
-CONFIDENCE_THRESHOLD = 0.12
+CONFIDENCE_THRESHOLD = 0.1
 IMAGE_SIZE = 480
 SKIP_FRAMES = 15
 MIN_INTERSECTION_RATIO = 0.5
 
 # tracker settings
-TIME_ENTER = 1.0
+TIME_ENTER = 1.5
 TIME_EXIT = 10.0
+
+# output settings
+OUTPUT_VIDEO_NAME = "output.mp4"
